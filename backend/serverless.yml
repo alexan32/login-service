@@ -1,0 +1,52 @@
+service: tome
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-iam-roles-per-function
+
+provider:
+  name: aws
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  deploymentMethod: direct
+  runtime: python3.11
+  config: ${file(../config/${opt:stage, 'dev'}.yml)}
+
+custom:
+  env: ${self:provider.config.env}
+
+functions:
+
+  testFunction:
+    name: tome-${self:custom.env}-testFucntion
+    description: this is a test function
+    handler: lambdas/test.handler
+    timeout: 6
+    environment:
+      LOG_LEVEL: INFO
+    iamRoleStatementsName: tome-${self:custom.env}-testFucntion-role
+    iamRoleStatemens:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:us-east-1:*:table/usersTable
+
+
+resources:
+
+  Resources:
+
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: tome-${self:custom.env}-usersTable
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
