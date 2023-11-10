@@ -4,6 +4,7 @@ frameworkVersion: '3'
 
 plugins:
   - serverless-iam-roles-per-function
+  # - serverless-python-requirements
 
 provider:
   name: aws

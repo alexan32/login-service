@@ -4,10 +4,15 @@ import boto3
 import os
 import time
 from botocore.exceptions import ClientError
+import base64
 
 logger = logging.getLogger()
 loglevel = os.environ["LOG_LEVEL"]
 logger.setLevel(eval(loglevel))
+
+
+def encrypt(text):
+    return str(base64.b64encode(text.encode("utf-8")))
 
 
 def putItem(table, item, maxRetries=2, depth=0,):

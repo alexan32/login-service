@@ -70,7 +70,7 @@ def createNewUser(username, password):
     #TODO: add password encryption system
     user = {
         'username': username,
-        'password': password,
+        'password': encrypt(password),
         'discordId': None
     }
     return putItem(userTable, user)
