@@ -3,17 +3,28 @@ import json
 import boto3
 import os
 import time
+from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 import base64
+import jwt
 
 logger = logging.getLogger()
 loglevel = os.environ["LOG_LEVEL"]
 logger.setLevel(eval(loglevel))
 
+def jwtDecodeToken(token: str):
+    secretKey = os.environ.get("SECRET_KEY")
+    return jwt.decode(jwt=token, key=secretKey, algorithms=["HS256"])
 
-def encrypt(text):
+def jwtEncodeData(data):
+    secretKey = os.environ.get("SECRET_KEY")
+    return jwt.encode(payload=data, key=secretKey, algorithm="HS256")
+
+def encryptPassword(text):
     return str(base64.b64encode(text.encode("utf-8")))
 
+def getUnixTime(dt=0):
+    return int(time.mktime((datetime.now() + timedelta(hours=dt)).timetuple()))
 
 def putItem(table, item, maxRetries=2, depth=0,):
 

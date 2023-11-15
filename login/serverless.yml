@@ -39,6 +39,7 @@ functions:
     environment:
       LOG_LEVEL: logging.INFO
       USER_TABLE: ${self:custom.userTable}
+      SECRET_KEY: ${self:provider.config.secret}
     iamRoleStatementsName: ${self:custom.prefix}-login-role
     iamRoleStatements:
       - Effect: Allow
