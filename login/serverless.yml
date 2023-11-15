@@ -4,7 +4,7 @@ frameworkVersion: '3'
 
 plugins:
   - serverless-iam-roles-per-function
-  # - serverless-python-requirements
+  - serverless-python-requirements
 
 provider:
   name: aws
@@ -19,6 +19,14 @@ custom:
   env: ${self:provider.config.env}
   prefix: tome-${self:custom.env}
   userTable: ${self:custom.prefix}-userTable
+  pythonRequirements:
+    useStaticCache: false
+    useDownloadCache: false
+    noDeploy: []
+    slim: true
+    layer:
+      compatibleRuntimes:
+        - python3.11
 
 package:
   individually: true
@@ -30,6 +38,8 @@ functions:
     name: ${self:custom.prefix}-loginService
     description: this is a test function
     handler: lambdas/loginService.handler
+    layers: 
+      - !Ref PythonRequirementsLambdaLayer
     package:
       patterns:
         - lambdas/loginService.py

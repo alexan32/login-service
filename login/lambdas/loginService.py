@@ -20,10 +20,12 @@ tokenDuration = int(os.environ.get("TOKEN_DURATION", '3'))
 
 def handler(event, ctx):
 
-    # logger.info(f"event: {json.dumps(event)}") # we don't want to log passwords!
+    logger.info(f"event: {json.dumps(event)}") # we don't want to log passwords!
     method = event['httpMethod']
     path = event['path']
-    body = json.loads(event['body'])
+    body = event.get('body')
+    if body is not None:
+        body = json.loads(event.get('body', '{}'))
     status = 400
     message = "bad request method or malformed request"
 
@@ -145,7 +147,7 @@ def createNewUser(username, password):
 
 def buildUserToken(user):
     payload = {**user}
-    payload['expiration'] = getUnixTime(tokenDuration)
+    payload['expiration'] = getUnixTime(housrs=tokenDuration)
     del payload['password']                 # remove password from token. JIC.
     return jwtEncodeData(payload)
 

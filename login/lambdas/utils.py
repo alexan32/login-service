@@ -1,12 +1,13 @@
-import logging
-import json
-import boto3
+import jwt
 import os
+import json
 import time
+import base64
+import logging
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
-import base64
-import jwt
+
+
 
 logger = logging.getLogger()
 loglevel = os.environ["LOG_LEVEL"]
@@ -23,8 +24,8 @@ def jwtEncodeData(data):
 def encryptPassword(text):
     return str(base64.b64encode(text.encode("utf-8")))
 
-def getUnixTime(dt=0):
-    return int(time.mktime((datetime.now() + timedelta(hours=dt)).timetuple()))
+def getUnixTime(kwargs):
+    return int(time.mktime((datetime.now() + timedelta(**kwargs)).timetuple()))
 
 def putItem(table, item, maxRetries=2, depth=0,):
 
@@ -74,6 +75,7 @@ def buildResponse(statusCode, message="ok", body=None):
         body['message'] = message
     else:
         body = {'message': message}
+    body['statusCode']=statusCode
     
     return {
         "isBase64Encoded": False,
