@@ -13,7 +13,10 @@ provider:
   stackName: tome-${opt:stage, 'dev'}
   deploymentMethod: direct
   runtime: python3.11
-  config: ${file(../config/${opt:stage, 'dev'}.yml)}
+  config: ${file(../config/${opt:stage, 'dev'}.yml)}	
+  httpApi:
+    cors: true
+
 
 custom:
   env: ${self:provider.config.env}
@@ -38,6 +41,19 @@ functions:
     name: ${self:custom.prefix}-loginService
     description: this is a test function
     handler: lambdas/loginService.handler
+    events:
+    - httpApi:
+        path: /health
+        method: GET
+    - httpApi:
+        path: /register
+        method: POST
+    - httpApi:
+        path: /login
+        method: POST
+    - httpApi:
+        path: /verify
+        method: POST 
     layers: 
       - !Ref PythonRequirementsLambdaLayer
     package:
@@ -75,7 +91,3 @@ resources:
           - AttributeName: username
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-
-    # gateway:
-    #   Type: AWS::ApiGateway::RestApi
-

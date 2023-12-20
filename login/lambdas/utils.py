@@ -8,27 +8,28 @@ from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 
 
-
 logger = logging.getLogger()
 loglevel = os.environ["LOG_LEVEL"]
 logger.setLevel(eval(loglevel))
+
 
 def jwtDecodeToken(token: str):
     secretKey = os.environ.get("SECRET_KEY")
     return jwt.decode(jwt=token, key=secretKey, algorithms=["HS256"])
 
+
 def jwtEncodeData(data):
     secretKey = os.environ.get("SECRET_KEY")
     return jwt.encode(payload=data, key=secretKey, algorithm="HS256")
 
+
 def encryptPassword(text):
     return str(base64.b64encode(text.encode("utf-8")))
 
-def getUnixTime(kwargs):
+def getUnixTime(**kwargs):
     return int(time.mktime((datetime.now() + timedelta(**kwargs)).timetuple()))
 
 def putItem(table, item, maxRetries=2, depth=0,):
-
     try:
         response = table.put_item(Item=item) 
     except ClientError as e:
@@ -42,6 +43,24 @@ def putItem(table, item, maxRetries=2, depth=0,):
             return putItem(table, item, maxRetries, depth + 1)
     
     return 200, "ok"
+
+
+def callFunctionWithRetry(func, kwargs, maxRetries=2, depth=0):
+    success = False
+    response = None
+
+    try:
+        response = func(**kwargs)
+    except Exception as e:
+        logger.error(f"Failed to perform function {func.__name__}. Error: {e}")
+        if depth == maxRetries:
+            logger.error(f"Maximum depth reached, {func.__name__} returning failure.")
+            return success, response
+        else:
+            time.sleep(1)
+            return callFunctionWithRetry(func, kwargs, maxRetries, depth + 1)
+    else:
+        return True, response
 
 
 def performQuery(table, queryArgs:dict, maxRetries=2, depth=0):
@@ -70,7 +89,6 @@ def performQuery(table, queryArgs:dict, maxRetries=2, depth=0):
 
 
 def buildResponse(statusCode, message="ok", body=None):
-    
     if body:
         body['message'] = message
     else:

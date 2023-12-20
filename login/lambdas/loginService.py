@@ -20,16 +20,17 @@ tokenDuration = int(os.environ.get("TOKEN_DURATION", '3'))
 
 def handler(event, ctx):
 
-    logger.info(f"event: {json.dumps(event)}") # we don't want to log passwords!
-    method = event['httpMethod']
-    path = event['path']
+    # logger.info(f"event: {json.dumps(event)}") # we don't want to log passwords! 
+    httpContext = event['requestContext'].get("http", {})
+    method = httpContext["method"]
+    path = httpContext['path']
     body = event.get('body')
     if body is not None:
         body = json.loads(event.get('body', '{}'))
     status = 400
     message = "bad request method or malformed request"
 
-    logger.info(f"\npath: {path}\nmethod: {method}\nbody: {event['body']}")
+    logger.info(f"\npath: {path}\nmethod: {method}\nbody: {body}") 
     
     if method == 'GET' and path == '/health':
         response = buildResponse(200, "UP")
@@ -41,14 +42,13 @@ def handler(event, ctx):
         response = login(body)
     
     elif method == 'POST' and path == '/verify':
-        response = verify(body, event['headers'].get('Authorization'))
+        response = verify(body, event['headers'].get('authorization'))
 
     else:
         response = buildResponse(status, message)
 
     logger.info(f"Response: {json.dumps(response)}")
     return response
-
 
 # REQUEST HANDLERS ----------------------------------------
 
@@ -147,7 +147,7 @@ def createNewUser(username, password):
 
 def buildUserToken(user):
     payload = {**user}
-    payload['expiration'] = getUnixTime(housrs=tokenDuration)
+    payload['expiration'] = getUnixTime(hours=tokenDuration)
     del payload['password']                 # remove password from token. JIC.
     return jwtEncodeData(payload)
 
