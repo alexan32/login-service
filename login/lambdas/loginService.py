@@ -1,7 +1,10 @@
-# Description: Handler for user sign in, sign out, and sign up
-# Input:
-# Output:
-# Last Update: 
+# DESCRIPTION: Handler for user registration, login, and verification
+#
+# NOTES: login service and user table should be kept generic. Data in table 
+# should not be directly tied to specific features.
+#
+# LAST UPDATE: 12/24/2023, lightly_caffienated. code revision and update to 
+# user row info.
 
 import logging
 import json
@@ -94,6 +97,7 @@ def login(body):
         # user's password is not directly in response body, but is in token.
         token = buildUserToken(user)
         del user['password']
+        del user['data']
         responseBody = {
             "user": user,
             "token": token
@@ -159,7 +163,8 @@ def createNewUser(username, password):
         'created': getDateString(),
         'verified': False,
         'permissions': [],
-        'lastAccess': "never"
+        'lastAccess': "never",
+        'data': {} # use this to keep key data to associate user with other tables, ie discordId. keep the auth service generic. 
     }
     return putItem(userTable, user)
 
