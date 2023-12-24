@@ -17,17 +17,18 @@ def jwtDecodeToken(token: str):
     secretKey = os.environ.get("SECRET_KEY")
     return jwt.decode(jwt=token, key=secretKey, algorithms=["HS256"])
 
-
 def jwtEncodeData(data):
     secretKey = os.environ.get("SECRET_KEY")
     return jwt.encode(payload=data, key=secretKey, algorithm="HS256")
-
 
 def encryptPassword(text):
     return str(base64.b64encode(text.encode("utf-8")))
 
 def getUnixTime(**kwargs):
     return int(time.mktime((datetime.now() + timedelta(**kwargs)).timetuple()))
+
+def getDateString():
+    return datetime.today().strftime('%Y-%m-%d')
 
 def putItem(table, item, maxRetries=2, depth=0,):
     try:
@@ -43,7 +44,6 @@ def putItem(table, item, maxRetries=2, depth=0,):
             return putItem(table, item, maxRetries, depth + 1)
     
     return 200, "ok"
-
 
 def callFunctionWithRetry(func, kwargs, maxRetries=2, depth=0):
     success = False
@@ -61,7 +61,6 @@ def callFunctionWithRetry(func, kwargs, maxRetries=2, depth=0):
             return callFunctionWithRetry(func, kwargs, maxRetries, depth + 1)
     else:
         return True, response
-
 
 def performQuery(table, queryArgs:dict, maxRetries=2, depth=0):
     status = 200
@@ -86,7 +85,6 @@ def performQuery(table, queryArgs:dict, maxRetries=2, depth=0):
             data = response["Items"]
 
     return status, message, data
-
 
 def buildResponse(statusCode, message="ok", body=None):
     if body:

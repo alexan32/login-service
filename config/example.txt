@@ -1,0 +1,4 @@
+env: d0
+secret: <some secret key>
+region: <your aws region>
+account: <your aws account>

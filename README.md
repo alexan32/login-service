@@ -18,7 +18,7 @@ region: us-east-1
 encryptionKey: ******************************
 ```
 
-In order to deploy a serverless stack, you need to run the following command:
+In order to deploy a serverless stack, perform npm install and run the following command:
 
 ```
 $ serverless deploy --stage < dev | test | prod >

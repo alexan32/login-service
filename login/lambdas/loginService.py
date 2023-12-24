@@ -24,9 +24,7 @@ def handler(event, ctx):
     httpContext = event['requestContext'].get("http", {})
     method = httpContext["method"]
     path = httpContext['path']
-    body = event.get('body')
-    if body is not None:
-        body = json.loads(event.get('body', '{}'))
+    body = json.loads(event.get('body', '{}')) 
     status = 400
     message = "bad request method or malformed request"
 
@@ -42,7 +40,7 @@ def handler(event, ctx):
         response = login(body)
     
     elif method == 'POST' and path == '/verify':
-        response = verify(body, event['headers'].get('authorization'))
+        response = verify(event['headers'].get('authorization'), body.get('action'))
 
     else:
         response = buildResponse(status, message)
@@ -64,6 +62,8 @@ def register(body):
             return buildResponse(409, "A user already exists with that username.")
         else:
             status, message = createNewUser(username, password)
+            if status != 200:
+                return buildResponse(status, "Failed to register new user")
             return buildResponse(status, "New user successfully created")
 
 
@@ -85,6 +85,12 @@ def login(body):
         if savedPassword != encryptedPassword:
             return buildResponse(403, "The password was invalid")
         
+        # update last access
+        user["lastAccess"] = getDateString()
+        status, message = putItem(userTable, user)
+        if status != 200:
+            logger.warn("Failed to update 'lastAccess' for user!")
+
         # user's password is not directly in response body, but is in token.
         token = buildUserToken(user)
         del user['password']
@@ -95,8 +101,8 @@ def login(body):
         return buildResponse(200, "Valid username and password. Login successful.", responseBody)
 
 
-# confirms a JWT is valid.
-def verify(body, token):
+# confirms a JWT is valid / user is allowed to perform action
+def verify(token, action=None):
 
     responseBody = {
         "verified": False,
@@ -106,7 +112,12 @@ def verify(body, token):
     if token is None:
         return buildResponse(403, "Missing \"Authorization\" header.", responseBody)
     
-    decodedToken = jwtDecodeToken(token)
+    try:
+        decodedToken = jwtDecodeToken(token)
+    except Exception as e:
+        logger.error(f"Failed to decode token! Error: {e}")
+        return buildResponse(401, "Token was invalid", responseBody)
+
     currentTime = getUnixTime()
     expiration = decodedToken.get('expiration', 0)
     username = decodedToken.get('username')
@@ -129,6 +140,12 @@ def verify(body, token):
         responseBody["expired"] = True
         return buildResponse(401, "Permissions in token did not match user.", responseBody)
     
+    # if action field is present, check if user is authorized for action.
+    if action:
+        if not action in permissions:
+            return(401, f"User is not authorized to perform '{action}'.", responseBody)
+
+
     responseBody["verified"] = True
     return buildResponse(200, "Token is verified", responseBody)
     
@@ -139,8 +156,10 @@ def createNewUser(username, password):
     user = {
         'username': username,
         'password': encryptPassword(password),
-        'discordId': None,
-        'permissions': []
+        'created': getDateString(),
+        'verified': False,
+        'permissions': [],
+        'lastAccess': "never"
     }
     return putItem(userTable, user)
 
