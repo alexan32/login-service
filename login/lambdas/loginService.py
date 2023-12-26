@@ -3,12 +3,7 @@
 # NOTES: login service and user table should be kept generic. Data in table 
 # should not be directly tied to specific features.
 #
-# LAST UPDATE: 12/24/2023, lightly_caffienated. code revision and update to 
-# user row info.
-
-# TODO: refactor to include a key related to project in initial login, and include key
-# in token. When token recieved, grab key from token and grab only permissions/data 
-# related to that project. 
+# LAST UPDATE: 12/24/2023, lightly_caffienated. added serviceId sort key.
 
 import logging
 import json
@@ -83,11 +78,15 @@ def login(body):
     if username == "" or password == "" or serviceId == "":
         return buildResponse(401, "missing required parameters")
     else:
+
+        # confirm user in db
         status, message, data = queryUsers(username, serviceId)
         if status != 200:
             return buildResponse(500, "An error occurred when trying to login. Please retry later.")
         if len(data) == 0:
             return buildResponse(403, "We could not find an account with that username.")
+        
+        # check password is valid
         user = data[0]
         savedPassword = user['password']
         encryptedPassword = encryptPassword(password)
