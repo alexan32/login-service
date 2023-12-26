@@ -6,6 +6,11 @@
 # LAST UPDATE: 12/24/2023, lightly_caffienated. code revision and update to 
 # user row info.
 
+# TODO: refactor to include a key related to project in initial login, and include key
+# in token. When token recieved, grab key from token and grab only permissions/data 
+# related to that project. Will need to implement some clever code to manage
+# permissions and user data all in one dict
+
 import logging
 import json
 import boto3
@@ -152,7 +157,18 @@ def verify(token, action=None):
 
     responseBody["verified"] = True
     return buildResponse(200, "Token is verified", responseBody)
+
+
+# add or update a value in the user data
+def addKey(token, body):
+
+    response = verify(token)
+    if response["statusCode"] != 200:
+        return response
     
+    key = body.get("key")
+    value = body.get("value")
+
 
 # OTHER OPERATIONS ----------------------------------------
 
