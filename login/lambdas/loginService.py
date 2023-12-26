@@ -5,6 +5,8 @@
 #
 # LAST UPDATE: 12/24/2023, lightly_caffienated. added serviceId sort key.
 
+# TODO: add method for adding/removing values to user "data" obj.
+
 import logging
 import json
 import boto3
