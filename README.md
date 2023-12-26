@@ -1,5 +1,5 @@
-# tome
-Discord bot and user interface for roll playing games with AWS backend
+# login service
+A simple login system that handles the logins for multiple services.
 
 
 
