@@ -89,24 +89,14 @@ resources:
         AttributeDefinitions:
           - AttributeName: username
             AttributeType: S
+          - AttributeName: serviceId
+            AttributeType: S
         KeySchema:
           - AttributeName: username
             KeyType: HASH
+          - AttributeName: serviceId
+            KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
-
-    # table of server/game settings
-    # serverConfigTable:
-    #   Type: AWS::DynamoDB::Table
-    #   Properties:
-    #     TableName: ${self:custom.serverConfigTable}
-    #     AttributeDefinitions:
-    #       - AttributeName: guildId
-    #         AttributeType: S
-    #     KeySchema:
-    #       - AttributeName: guildId
-    #         KeyType: HASH
-    #     BillingMode: PAY_PER_REQUEST
-
 
   Outputs:
     UsersTable: 

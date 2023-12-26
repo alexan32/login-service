@@ -8,8 +8,7 @@
 
 # TODO: refactor to include a key related to project in initial login, and include key
 # in token. When token recieved, grab key from token and grab only permissions/data 
-# related to that project. Will need to implement some clever code to manage
-# permissions and user data all in one dict
+# related to that project. 
 
 import logging
 import json
@@ -62,14 +61,15 @@ def handler(event, ctx):
 def register(body):
     username = body.get("username", "").strip().lower()
     password = body.get("password", "").strip().lower()
-    if username == "" or password == "":
+    serviceId = body.get("serviceId", "").strip().lower()
+    if username == "" or password == "" or serviceId == "":
         return buildResponse(401, "missing required parameters")
     else:
-        status, message, users = queryUsers(username)
+        status, message, users = queryUsers(username, serviceId)
         if len(users) > 0:
             return buildResponse(409, "A user already exists with that username.")
         else:
-            status, message = createNewUser(username, password)
+            status, message = createNewUser(username, password, serviceId)
             if status != 200:
                 return buildResponse(status, "Failed to register new user")
             return buildResponse(status, "New user successfully created")
@@ -79,10 +79,11 @@ def register(body):
 def login(body):
     username = body.get("username", "").strip().lower()
     password = body.get("password", "").strip().lower()
-    if username == "" or password == "":
+    serviceId = body.get("serviceId", "").strip().lower()
+    if username == "" or password == "" or serviceId == "":
         return buildResponse(401, "missing required parameters")
     else:
-        status, message, data = queryUsers(username)
+        status, message, data = queryUsers(username, serviceId)
         if status != 200:
             return buildResponse(500, "An error occurred when trying to login. Please retry later.")
         if len(data) == 0:
@@ -131,12 +132,13 @@ def verify(token, action=None):
     expiration = decodedToken.get('expiration', 0)
     username = decodedToken.get('username')
     permissions = decodedToken.get('permissions')
+    serviceId = decodedToken.get('serviceId')
 
     if currentTime > expiration:
         responseBody["expired"] = True
         return buildResponse(401, "Token is expired.", responseBody)
     
-    status, message, data = queryUsers(username)
+    status, message, data = queryUsers(username, serviceId)
     if status != 200:
         return buildResponse(500, "An error occurred when trying to login. Please retry later.", responseBody)
     if len(data) == 0:
@@ -159,22 +161,12 @@ def verify(token, action=None):
     return buildResponse(200, "Token is verified", responseBody)
 
 
-# add or update a value in the user data
-def addKey(token, body):
-
-    response = verify(token)
-    if response["statusCode"] != 200:
-        return response
-    
-    key = body.get("key")
-    value = body.get("value")
-
-
 # OTHER OPERATIONS ----------------------------------------
 
-def createNewUser(username, password):
+def createNewUser(username, password, serviceId):
     user = {
         'username': username,
+        'serviceId': serviceId,
         'password': encryptPassword(password),
         'created': getDateString(),
         'verified': False,
@@ -192,5 +184,5 @@ def buildUserToken(user):
     return jwtEncodeData(payload)
 
 
-def queryUsers(username:str):
-    return performQuery(userTable, {"KeyConditionExpression": Key('username').eq(username)})
+def queryUsers(username:str, serviceId: str):
+    return performQuery(userTable, {"KeyConditionExpression": Key('username').eq(username) & Key('serviceId').eq(serviceId)})
