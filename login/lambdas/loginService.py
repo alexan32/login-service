@@ -21,9 +21,9 @@ logger.setLevel(eval(loglevel))
 dynamodb = boto3.resource('dynamodb')
 userTable = dynamodb.Table(os.environ['USER_TABLE'])
 tokenDuration = int(os.environ.get("TOKEN_DURATION", '3'))
+validServiceIds = json.loads(os.environ["VALID_SERVICE_IDS"])
 
 def handler(event, ctx):
-
     # logger.info(f"event: {json.dumps(event)}") # we don't want to log passwords! 
     httpContext = event['requestContext'].get("http", {})
     method = httpContext["method"]
@@ -62,6 +62,8 @@ def register(body):
     if username == "" or password == "" or serviceId == "":
         return buildResponse(401, "missing required parameters")
     else:
+        if serviceId not in validServiceIds:
+            return buildResponse(401, f"'{serviceId}' is not a valid serviceId")
         status, message, users = queryUsers(username, serviceId)
         if len(users) > 0:
             return buildResponse(409, "A user already exists with that username.")
@@ -79,8 +81,9 @@ def login(body):
     serviceId = body.get("serviceId", "").strip().lower()
     if username == "" or password == "" or serviceId == "":
         return buildResponse(401, "missing required parameters")
+    elif serviceId not in validServiceIds:
+        return buildResponse(401, f"'{serviceId}' is not a valid serviceId")
     else:
-
         # confirm user in db
         status, message, data = queryUsers(username, serviceId)
         if status != 200:

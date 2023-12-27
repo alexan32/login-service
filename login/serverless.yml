@@ -67,6 +67,7 @@ functions:
       LOG_LEVEL: logging.INFO
       USER_TABLE: ${self:custom.userTable}
       SECRET_KEY: ${self:provider.config.secret}
+      VALID_SERVICE_IDS: '["tome"]'
     iamRoleStatementsName: ${self:custom.prefix}-login-role
     iamRoleStatements:
       - Effect: Allow
