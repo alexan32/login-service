@@ -1,4 +1,4 @@
-service: tome
+service: login
 
 frameworkVersion: '3'
 
@@ -10,7 +10,7 @@ provider:
   name: aws
   region: us-east-1
   stage: ${opt:stage, 'dev'}
-  stackName: tome-${opt:stage, 'dev'}
+  stackName: login-${opt:stage, 'dev'}
   deploymentMethod: direct
   runtime: python3.11
   config: ${file(../config/${opt:stage, 'dev'}.yml)}	
@@ -20,7 +20,7 @@ provider:
 
 custom:
   env: ${self:provider.config.env}
-  prefix: tome-${self:custom.env}
+  prefix: login-${self:custom.env}
   userTable: ${self:custom.prefix}-userTable
   serverConfigTable: ${self:custom.prefix}-serverConfigTable
   pythonRequirements:
@@ -40,7 +40,7 @@ package:
 functions:
   loginService:
     name: ${self:custom.prefix}-loginService
-    description: tome endpoint for log in and authentication
+    description: lambda service for log in and authentication
     handler: lambdas/loginService.handler
     events:
     - httpApi:

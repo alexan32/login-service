@@ -12,6 +12,8 @@ logger = logging.getLogger()
 loglevel = os.environ["LOG_LEVEL"]
 logger.setLevel(eval(loglevel))
 
+# ----------------------------------------------------------------------------
+#TODO: move these functions out of the utils and into loginService
 
 def jwtDecodeToken(token: str):
     secretKey = os.environ.get("SECRET_KEY")
@@ -23,6 +25,8 @@ def jwtEncodeData(data):
 
 def encryptPassword(text):
     return str(base64.b64encode(text.encode("utf-8")))
+
+# ----------------------------------------------------------------------------
 
 def getUnixTime(**kwargs):
     return int(time.mktime((datetime.now() + timedelta(**kwargs)).timetuple()))
